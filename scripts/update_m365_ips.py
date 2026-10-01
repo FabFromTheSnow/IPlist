@@ -1,19 +1,47 @@
 import json
 import urllib.request
+import uuid
+import ipaddress
+from pathlib import Path
 
-URL = "https://endpoints.office.com/endpoints/worldwide?clientrequestid=00000000-0000-0000-0000-000000000000"
+client_request_id = str(uuid.uuid4())
 
-with urllib.request.urlopen(URL) as response:
+URL = (
+    "https://endpoints.office.com/endpoints/Worldwide"
+    f"?clientRequestId={client_request_id}"
+)
+
+request = urllib.request.Request(
+    URL,
+    headers={
+        "User-Agent": "M365-IPList-GitHubAction/1.0"
+    }
+)
+
+with urllib.request.urlopen(request, timeout=30) as response:
     data = json.load(response)
 
-ips = set()
+ipv4 = set()
+ipv6 = set()
 
 for entry in data:
     for ip in entry.get("ips", []):
-        ips.add(ip)
+        network = ipaddress.ip_network(ip, strict=False)
 
-with open("output/microsoft365-ips.txt", "w", encoding="utf-8") as f:
-    for ip in sorted(ips):
+        if network.version == 4:
+            ipv4.add(str(network))
+        else:
+            ipv6.add(str(network))
+
+Path("output").mkdir(exist_ok=True)
+
+with open("output/microsoft365-ipv4.txt", "w", encoding="utf-8") as f:
+    for ip in sorted(ipv4, key=lambda x: ipaddress.ip_network(x)):
         f.write(ip + "\n")
 
-print(f"{len(ips)} IP ranges written")
+with open("output/microsoft365-ipv6.txt", "w", encoding="utf-8") as f:
+    for ip in sorted(ipv6, key=lambda x: ipaddress.ip_network(x)):
+        f.write(ip + "\n")
+
+print(f"{len(ipv4)} IPv4 networks written")
+print(f"{len(ipv6)} IPv6 networks written")
