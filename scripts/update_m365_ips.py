@@ -8,13 +8,13 @@ client_request_id = str(uuid.uuid4())
 
 URL = (
     "https://endpoints.office.com/endpoints/Worldwide"
-    f"?clientRequestId={client_request_id}"
+    f"?ClientRequestId={client_request_id}"
 )
 
 request = urllib.request.Request(
     URL,
     headers={
-        "User-Agent": "M365-IPList-GitHubAction/1.0"
+        "User-Agent": "Mozilla/5.0"
     }
 )
 
