@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -22,18 +22,28 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Update IP list
+      - name: Generate Microsoft 365 IP lists
         run: python scripts/update_m365_ips.py
 
-      - name: Commit changes
+      - name: Show generated files
+        run: |
+          echo "IPv4:"
+          wc -l output/microsoft365-ipv4.txt
+          head -10 output/microsoft365-ipv4.txt
+
+          echo "IPv6:"
+          wc -l output/microsoft365-ipv6.txt
+          head -10 output/microsoft365-ipv6.txt
+
+      - name: Commit updated IP lists
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add output/microsoft365-ips.txt
+          git add output/
 
           if git diff --cached --quiet; then
-            echo "No changes"
+            echo "No Microsoft 365 IP changes detected."
             exit 0
           fi
 
